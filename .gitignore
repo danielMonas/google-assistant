@@ -1,0 +1,6 @@
+*.pyc
+*.dat
+*.pickle
+credentials.json
+/__pycache__
+/.vscode
