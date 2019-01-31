@@ -38,56 +38,58 @@ class Sorter:
                 pickle.dump(creds, token)
         return creds
 
-    def get_filtered_ids(self, query, label, user="me"):
+    def get_filtered_ids(self, query, label):
         """ List all Messages of the user's mailbox matching the query.
             service: Authorized Gmail API service object.
             user_id: User's email address.
             query:   String to filter the messages by. """
         query = "from: {0} OR to: {0}".format(query)
-        response = self.service.users().messages().list(userId=user, q=query).execute()
+        response = self.service.users().messages().list(userId='me', q=query).execute()
         ids = []
         if 'messages' in response:
             response = response['messages']
             ids.extend([msg['id'] for msg in response if not self.is_labeled(msg['id'], label)])
         while 'nextPageToken' in response:
-            token = response['nextPageToken']
             response = self.service.users().messages().list(
-                userId=user, q=query, pageToken=token).execute()['messages']
+                userId='me', q=query, pageToken=response['nextPageToken']).execute()['messages']
             ids.extend([msg['id'] for msg in response if not self.is_labeled(msg['id'], label)])
         return ids
 
-    def is_labeled(self, msg_id, label, user_id="me"):
+    def is_labeled(self, msg_id, label):
         """ Check if the message is already labeled """
-        message = self.service.users().messages().get(userId=user_id, id=msg_id).execute()
+        message = self.service.users().messages().get(userId='me', id=msg_id).execute()
+        #print(message['internalDate'])
         return label in message['labelIds']
 
-    def init_queries(self, user="me"):
+    def init_queries(self):
         """ Main feauture of the program - tag emails according to the settings file."""
-        # Setting up data
         results = self.service.users().labels().list(userId='me').execute()
         labels = dict([l['name'], l['id']] for l in results.get('labels', []))
-        settings = self.whitelist.get_dict()
+        settings = self.whitelist.get_settings()
+        for tag, queries in settings.items():
+            msg_ids = []
+            print("\n\n[+] Current tag query: " + tag)
+            for q in queries:
+                print("[+] Searching for email query {0} ...".format(q))
+                msg_ids += self.get_filtered_ids(q, labels[tag])
+            print("[!] Located a total of {0} messages: tagging as {1}".format(len(msg_ids), tag))
+            self.tag(msg_ids, {'removeLabelIds': [], 'addLabelIds': [labels[tag]]})
 
-        for query in settings.keys():
-            print("\n\n[+] Current email query: " + query)
-            msg_ids = self.get_filtered_ids(query, labels[settings[query]], user)
-            print("[!] Located {0} messages: tagging as {1}".format(len(msg_ids), settings[query]))
-            new_tags = {'removeLabelIds': [], 'addLabelIds': [labels[settings[query]]]}
-
-            for index, msg in enumerate(msg_ids):
-                try:
-                    self.service.users().messages().modify(
-                        userId=user, id=msg, body=new_tags).execute()
-                    self.update_progress(len(msg_ids), index + 1)
-                except errors.HttpError as error:
-                    print('An error occurred: ' + error)
+    def tag(self, msg_ids, new_tags):
+        """ Tagging messages with new tags """
+        for index, msg in enumerate(msg_ids):
+            try:
+                self.service.users().messages().modify(userId='me', id=msg, body=new_tags).execute()
+                self.update_progress(len(msg_ids), index + 1)
+            except errors.HttpError as error:
+                print('An error occurred: ' + str(error))
 
     def update_progress(self, total, completed):
         """ Generating a progress bar """
         bar_len = 50
         progress = round((completed / total) * 100, 2)
         block = int(bar_len * progress / 100)
-
+        # Creating a progress bar per each tagging query
         sys.stdout.write("\rProgress: [{0}]".format("#" * block + "-" * (bar_len - block)))
         if progress == 100.0:
             sys.stdout.write(" Completed.")

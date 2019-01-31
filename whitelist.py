@@ -3,11 +3,13 @@
 
 import os
 import subprocess
+import datetime
+import json 
 
 class Whitelist():
     """Wrapper handling updates to the file whitelist.dat"""
 
-    def __init__(self, filename=os.path.dirname(os.path.abspath(__file__)) + "//whitelist.dat"):
+    def __init__(self, filename=os.path.dirname(os.path.abspath(__file__)) + "//settings.json"):
         self.filename = filename
         if not os.path.exists(self.filename): # Ensuring the file exists
             open(self.filename, 'w').close()
@@ -17,11 +19,11 @@ class Whitelist():
         # Allowing the user to edit the settings file
         subprocess.Popen(["gedit", self.filename]).wait()
 
-    def get_dict(self):
-        """Read from the whitelist data file and translate the data into a dictionary.
-            Note that each line in the file is excepted to be in the following format:
-            <email address>,<label>"""
-        with open(self.filename, "r") as file:
-            data = file.readlines()
-            valid_lines = [l for l in data if len(l.split()) is 2 and not l.startswith("#")]
-        return dict([line.split() for line in valid_lines])
+    def get_settings(self):
+        """ Return the settings json """
+        with open(self.filename) as f:
+            return json.load(f)
+
+    def get_timestamp(self):
+        """ Check the last time the program was run to avoid re-reading the same mails."""
+        return datetime.datetime.fromtimestamp(os.stat(self.filename).st_atime)

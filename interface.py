@@ -23,5 +23,6 @@ def main():
         sorter.whitelist.edit()
     if GO in sys.argv[1]:
         sorter.init_queries()
+    print(sorter.whitelist.get_timestamp())
 if __name__ == '__main__':
     main()
