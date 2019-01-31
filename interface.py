@@ -17,12 +17,11 @@ def main():
         print("Usage: {0} [OPTIONS]".format(os.path.basename(__file__)))
         print("-{0}: Update the settings file.".format(SETTINGS))
         print("-{0}: run the program".format(GO))
-        return 0
+        return
 
     if SETTINGS in sys.argv[1]:
         sorter.whitelist.edit()
     if GO in sys.argv[1]:
         sorter.init_queries()
-    print(sorter.whitelist.get_timestamp())
 if __name__ == '__main__':
     main()
