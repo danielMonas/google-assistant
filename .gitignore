@@ -1,0 +1,6 @@
+*.pyc
+*.dat
+*.pickle
+*.json
+/__pycache__
+/.vscode
