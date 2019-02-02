@@ -3,14 +3,14 @@
 
 import sys
 import os
-from back_end import Sorter
+from tagger import Tagger
 
 SETTINGS = "s"
 GO = "g"
 
 def main():
     """ Main function. """
-    sorter = Sorter()
+    tagger = Tagger()
     if (len(sys.argv) != 2
             or not sys.argv[1].startswith("-")
             or not any(x in sys.argv[1][1:] for x in [SETTINGS, GO])):
@@ -20,8 +20,8 @@ def main():
         return
 
     if SETTINGS in sys.argv[1]:
-        sorter.whitelist.edit()
+        tagger.config.edit()
     if GO in sys.argv[1]:
-        sorter.init_queries()
+        tagger.init_queries()
 if __name__ == '__main__':
     main()

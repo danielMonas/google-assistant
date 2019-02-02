@@ -1,15 +1,15 @@
 """ Wrapper to handling usage of the whitelist file
-# Made by Daniel Monastirski, January 2019 """
+    Made by Daniel Monastirski, January 2019 """
 
 import os
 import subprocess
 import datetime
-import json 
+import json
 
-class Whitelist():
-    """Wrapper handling updates to the file whitelist.dat"""
+class Config():
+    """Wrapper handling updates to the Gmail settings file"""
 
-    def __init__(self, filename=os.path.dirname(os.path.abspath(__file__)) + "//settings.json"):
+    def __init__(self, filename="settings.json"):
         self.filename = filename
         if not os.path.exists(self.filename): # Ensuring the file exists
             open(self.filename, 'w').close()

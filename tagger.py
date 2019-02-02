@@ -1,5 +1,5 @@
 """ An automatic mail sorter using Gmail's API
-# Made by Daniel Monastirski, January 2019 """
+    Made by Daniel Monastirski, January 2019 """
 
 import os
 import sys
@@ -8,14 +8,14 @@ from apiclient import errors
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
-from whitelist import Whitelist
+from config import Config
 
-class Sorter:
+class Tagger:
     """ Main class responsible for using Gmail's api directly """
 
     def __init__(self):
         self.scopes = 'https://www.googleapis.com/auth/gmail.modify'
-        self.whitelist = Whitelist()
+        self.config = Config()
         self.service = build('gmail', 'v1', credentials=self.get_credentials())
 
 
@@ -65,42 +65,43 @@ class Sorter:
         """ Main feauture of the program - tag emails according to the settings file."""
         results = self.service.users().labels().list(userId='me').execute()
         labels = dict([l['name'], l['id']] for l in results.get('labels', []))
-        settings = self.whitelist.get_settings()
+        settings = self.config.get_settings()
         for tag, queries in settings.items():
             msg_ids = []
             print("\n\n[+] Current tag query: " + tag)
-            for q in queries:
-                print("[+] Searching for email query {0} ...".format(q))
-                msg_ids += self.get_filtered_ids(q, labels[tag])
+            for current in queries:
+                print("[+] Searching for email query {0} ...".format(current))
+                msg_ids += self.get_filtered_ids(current, labels[tag])
             print("[!] Located a total of {0} messages: tagging as {1}".format(len(msg_ids), tag))
             self.tag(msg_ids, {'removeLabelIds': [], 'addLabelIds': [labels[tag]]})
+        
 
     def tag(self, msg_ids, new_tags):
         """ Tagging messages with new tags """
         for index, msg in enumerate(msg_ids):
             try:
                 self.service.users().messages().modify(userId='me', id=msg, body=new_tags).execute()
-                self.update_progress(len(msg_ids), index + 1)
+                update_progress(len(msg_ids), index + 1)
             except errors.HttpError as error:
                 print('An error occurred: ' + str(error))
 
-    def update_progress(self, total, completed):
-        """ Generating a progress bar """
-        bar_len = 50
-        progress = round((completed / total) * 100, 2)
-        block = int(bar_len * progress / 100)
-        # Creating a progress bar per each tagging query
-        sys.stdout.write("\rProgress: [{0}]".format("#" * block + "-" * (bar_len - block)))
-        if progress == 100.0:
-            sys.stdout.write(" Completed.")
-        else:
-            sys.stdout.write(" {0}%".format(progress))
-        sys.stdout.flush()
+def update_progress(total, completed):
+    """ Generating a progress bar """
+    bar_len = 50
+    progress = round((completed / total) * 100, 2)
+    block = int(bar_len * progress / 100)
+    # Creating a progress bar per each tagging query
+    sys.stdout.write("\rProgress: [{0}]".format("#" * block + "-" * (bar_len - block)))
+    if progress == 100.0:
+        sys.stdout.write(" Completed.")
+    else:
+        sys.stdout.write(" {0}%".format(progress))
+    sys.stdout.flush()
 
 def main():
     """ Main function."""
-    sorter = Sorter()
-    sorter.init_queries()
+    tag = Tagger()
+    tag.init_queries()
 
 if __name__ == '__main__':
     main()
