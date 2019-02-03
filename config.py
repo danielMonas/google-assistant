@@ -1,9 +1,7 @@
-""" Wrapper to handling usage of the whitelist file
-    Made by Daniel Monastirski, January 2019 """
+""" Wrapper to handling usage of the settings file """
 
 import os
 import subprocess
-import datetime
 import json
 
 class Config():
@@ -21,9 +19,5 @@ class Config():
 
     def get_settings(self):
         """ Return the settings json """
-        with open(self.filename) as f:
-            return json.load(f)
-
-    def get_timestamp(self):
-        """ Check the last time the program was run to avoid re-reading the same mails."""
-        return datetime.datetime.fromtimestamp(os.stat(self.filename).st_atime)
+        with open(self.filename) as data:
+            return json.load(data)

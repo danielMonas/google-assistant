@@ -1,5 +1,4 @@
-""" An automatic mail sorter using Gmail's API
-    Made by Daniel Monastirski, January 2019 """
+""" An automatic mail sorter using Gmail's API """
 
 import os
 import sys
@@ -38,12 +37,12 @@ class Tagger:
                 pickle.dump(creds, token)
         return creds
 
-    def get_filtered_ids(self, query, label):
+    def get_filtered_ids(self, query, label, time="2"):
         """ List all Messages of the user's mailbox matching the query.
-            service: Authorized Gmail API service object.
             user_id: User's email address.
-            query:   String to filter the messages by. """
-        query = "from: {0} OR to: {0}".format(query)
+            query:   String to filter the messages by.
+            time:    Time range to filter messages from, by default is 48 hours. """
+        query = "newer_than:{0}d (from: {1} OR to: {1})".format(time, query)
         response = self.service.users().messages().list(userId='me', q=query).execute()
         ids = []
         if 'messages' in response:
@@ -58,23 +57,22 @@ class Tagger:
     def is_labeled(self, msg_id, label):
         """ Check if the message is already labeled """
         message = self.service.users().messages().get(userId='me', id=msg_id).execute()
-        #print(message['internalDate'])
         return label in message['labelIds']
 
-    def init_queries(self):
+    def init_queries(self, time="2"):
         """ Main feauture of the program - tag emails according to the settings file."""
         results = self.service.users().labels().list(userId='me').execute()
         labels = dict([l['name'], l['id']] for l in results.get('labels', []))
         settings = self.config.get_settings()
+
         for tag, queries in settings.items():
             msg_ids = []
             print("\n\n[+] Current tag query: " + tag)
             for current in queries:
                 print("[+] Searching for email query {0} ...".format(current))
-                msg_ids += self.get_filtered_ids(current, labels[tag])
+                msg_ids += self.get_filtered_ids(current, labels[tag], time)
             print("[!] Located a total of {0} messages: tagging as {1}".format(len(msg_ids), tag))
             self.tag(msg_ids, {'removeLabelIds': [], 'addLabelIds': [labels[tag]]})
-        
 
     def tag(self, msg_ids, new_tags):
         """ Tagging messages with new tags """

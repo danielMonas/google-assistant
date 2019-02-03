@@ -1,27 +1,37 @@
-""" User interface for the Gmail Sorter
-    Made by Daniel Monastirski, January 2019 """
+""" User interface for the Gmail Sorter """
 
 import sys
 import os
 from tagger import Tagger
 
-SETTINGS = "s"
-GO = "g"
+FLAGS = {
+    "settings": "-s",
+    "Gmail": "-g",
+    "time": "-t"
+}
 
 def main():
     """ Main function. """
     tagger = Tagger()
-    if (len(sys.argv) != 2
-            or not sys.argv[1].startswith("-")
-            or not any(x in sys.argv[1][1:] for x in [SETTINGS, GO])):
+    arguments = sys.argv[1:]
+    days = "2"
+    if not any(x in arguments for x in list(FLAGS.values())):
         print("Usage: {0} [OPTIONS]".format(os.path.basename(__file__)))
-        print("-{0}: Update the settings file.".format(SETTINGS))
-        print("-{0}: run the program".format(GO))
+        print("{0}: Edit the Gmail settings file.".format(FLAGS["settings"]))
+        print("{0}: Run the Gmail tagging script.".format(FLAGS["Gmail"]))
+        print("{0}=DAYS: Filter by number of days, by default 2 days.".format(FLAGS["time"]))
         return
 
-    if SETTINGS in sys.argv[1]:
+    if FLAGS["time"] in arguments:
+        if FLAGS["time"] == arguments[-1]:
+            print("Error: Invalid flag!")
+            return
+        days = arguments[arguments.index(FLAGS["time"]) + 1]
+
+    if FLAGS["settings"] in arguments:
         tagger.config.edit()
-    if GO in sys.argv[1]:
-        tagger.init_queries()
+    if FLAGS["Gmail"] in arguments:
+        tagger.init_queries(days)
+
 if __name__ == '__main__':
     main()
