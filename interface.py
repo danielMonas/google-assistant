@@ -1,37 +1,44 @@
-""" User interface for the Gmail Sorter """
+""" UI for the entire project, using Kivy """
 
-import sys
-import os
-from tagger import Tagger
+from kivy.app import App
+from kivy.uix.label import Label
+from kivy.uix.textinput import TextInput
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.button import Button
+import kivy
+kivy.require('1.10.1')
 
-FLAGS = {
-    "settings": "-s",
-    "Gmail": "-g",
-    "time": "-t"
-}
+
+class ConfigList(BoxLayout):
+    """ Configurations main screen """
+    def __init__(self, **kwargs):
+        super(ConfigList, self).__init__(**kwargs)
+        self.add_widget(Label(text='Tag As: [Tag0]'))
+        self.add_widget(TextInput(text='queries'))
+        self.add_widget(TextInput(text='untag queries')) #TODO - add option in future version.
+
+class Buttons(BoxLayout):
+    """ Main buttons """
+    def __init__(self, **kwargs):
+        super(Buttons, self).__init__(**kwargs)
+        self.add_widget(Button(text='Run', size_hint=(0.3, 0.3)))
+        self.add_widget(Button(text='Next Setting', size_hint=(0.4, 0.3)))
+
+class MainLayout(BoxLayout):
+    """ Main layout wrapper """
+    def __init__(self, **kwargs):
+        super(MainLayout, self).__init__(**kwargs)
+        self.add_widget(ConfigList())
+        self.add_widget(Buttons())
+
+class Interface(App):
+    """ Main GUI class """
+    def build(self):
+        """ Building the GUI """
+        return MainLayout(spacing=10, orientation='vertical')
 
 def main():
     """ Main function. """
-    tagger = Tagger()
-    arguments = sys.argv[1:]
-    days = "2"
-    if not any(x in arguments for x in list(FLAGS.values())):
-        print("Usage: {0} [OPTIONS]".format(os.path.basename(__file__)))
-        print("{0}: Edit the Gmail settings file.".format(FLAGS["settings"]))
-        print("{0}: Run the Gmail tagging script.".format(FLAGS["Gmail"]))
-        print("{0}=DAYS: Filter by number of days, by default 2 days.".format(FLAGS["time"]))
-        return
-
-    if FLAGS["time"] in arguments:
-        if FLAGS["time"] == arguments[-1]:
-            print("Error: Invalid flag!")
-            return
-        days = arguments[arguments.index(FLAGS["time"]) + 1]
-
-    if FLAGS["settings"] in arguments:
-        tagger.config.edit()
-    if FLAGS["Gmail"] in arguments:
-        tagger.init_queries(days)
-
+    Interface().run()
 if __name__ == '__main__':
     main()
