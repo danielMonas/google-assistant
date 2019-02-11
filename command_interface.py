@@ -26,8 +26,8 @@ def main():
         if FLAGS["time"] == arguments[-1]:
             print("Error: Invalid flag!")
             return
-        days = arguments[arguments.index(FLAGS["time"]) + 1]
-
+        days = arguments[(arguments.index(FLAGS["time"]) + 1)]
+    print(days)
     if FLAGS["settings"] in arguments:
         tagger.config.edit()
     if FLAGS["Gmail"] in arguments:

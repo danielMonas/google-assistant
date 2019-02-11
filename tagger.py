@@ -43,6 +43,7 @@ class Tagger:
             query:   String to filter the messages by.
             time:    Time range to filter messages from, by default is 48 hours. """
         query = "newer_than:{0}d (from: {1} OR to: {1})".format(time, query)
+        print(query)
         response = self.service.users().messages().list(userId='me', q=query).execute()
         ids = []
         if 'messages' in response:
